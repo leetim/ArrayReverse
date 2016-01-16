@@ -1,4 +1,5 @@
 require "socket"
+# require ""
 
 class File
 	def read_number
@@ -31,11 +32,18 @@ n = get_word_count input
 TCPServer.open "10.16.177.89", 3000 do |server|
 	k = 0
 	connections = []
+	processes = []
+	if connect_count == 0
+		connect_count = n / 10
+		for i in (0...connect_count)
+			processes.push spawn(RbConfig.ruby, "client.rb")
+		end
+	end
 	while k < connect_count
 		begin 
 			connections.push server.accept_nonblock
 			k += 1
-			puts "connected"
+			# puts "connected"
 		rescue IO::WaitReadable, Errno::EINTR
 			IO.select([server])
 			retry
@@ -51,5 +59,9 @@ TCPServer.open "10.16.177.89", 3000 do |server|
 	out_f = File.open(output, "w")
 	for con in connections.reverse
 		out_f.write con.gets.chomp + " "
+		con.close
+	end
+	for i in processes
+		Process.wait i
 	end
 end
