@@ -45,7 +45,11 @@ TCPServer.open "10.16.177.89", 3000 do |server|
 	c = n / connect_count
 	r = n % connect_count
 	for con in connections
-		con.puts Array.new(r != 0 ? c + 1 : c){f.read_number}.join(" ")
+		con.puts Array.new(r > 0 ? c + 1 : c){f.read_number}.join(" ")
 		r -= 1
+	end
+	out_f = File.open(output, "w")
+	for con in connections.reverse
+		out_f.write con.gets.chomp + " "
 	end
 end
