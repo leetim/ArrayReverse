@@ -34,7 +34,7 @@ TCPServer.open "10.16.177.89", 3000 do |server|
 	connections = []
 	processes = []
 	if connect_count == 0
-		connect_count = n / 10
+		connect_count = n / 100
 		for i in (0...connect_count)
 			processes.push spawn(RbConfig.ruby, "client.rb")
 		end
@@ -43,7 +43,6 @@ TCPServer.open "10.16.177.89", 3000 do |server|
 		begin 
 			connections.push server.accept_nonblock
 			k += 1
-			# puts "connected"
 		rescue IO::WaitReadable, Errno::EINTR
 			IO.select([server])
 			retry
@@ -52,16 +51,16 @@ TCPServer.open "10.16.177.89", 3000 do |server|
 	f = File.open(input)
 	c = n / connect_count
 	r = n % connect_count
-	for con in connections
+	connections.each do |con|
 		con.puts Array.new(r > 0 ? c + 1 : c){f.read_number}.join(" ")
 		r -= 1
 	end
 	out_f = File.open(output, "w")
-	for con in connections.reverse
+	connections.reverse.each do |con|
 		out_f.write con.gets.chomp + " "
 		con.close
 	end
-	for i in processes
+	processes.each do |i|
 		Process.wait i
 	end
 end
